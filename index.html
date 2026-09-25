@@ -23,7 +23,7 @@
     --shadow-md:0 4px 10px rgba(20,21,26,0.06), 0 1px 2px rgba(20,21,26,0.04);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
   .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 100px;}
   header{margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
   header h1{font-size:20px;margin:0 0 2px;font-weight:600;letter-spacing:-0.01em;}
@@ -223,7 +223,7 @@
     .header-actions .btn.primary{flex:1 1 100%;order:5;}
     #saveStatus{width:100%;order:-1;margin-right:0;margin-bottom:2px;}
 
-    .layout{flex-direction:column;gap:12px;align-items:stretch;}
+    .layout{flex-direction:column;gap:12px;}
 
     .nav-toggle{
       display:flex;align-items:center;justify-content:space-between;width:100%;
@@ -245,7 +245,7 @@
     .topic-name{font-size:14px;}
     .topic-desc{font-size:12.5px;}
 
-    .main{padding:16px;min-height:auto;width:100%;min-width:0;}
+    .main{padding:16px;min-height:auto;}
     .topic-header h2{font-size:19px;}
 
     .btn{min-height:40px;padding:9px 14px;}
@@ -254,28 +254,6 @@
     .cb-table input,.cb-table select{font-size:16px;}
     .tool-tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
     .tool-tab{flex-shrink:0;}
-
-    /* prevent iOS auto-zoom on focus by keeping all text inputs at 16px+ */
-    .content-area,.link-input,.cb-field input,.cb-pname-input{font-size:16px;}
-
-    /* --- invoice template on small screens --- */
-    .invoice-actions{gap:8px;}
-    .invoice-actions button{flex:1 1 auto;padding:10px 12px;min-height:44px;}
-    .invoice-wrap{padding:16px 14px;font-size:12.5px;}
-    .invoice-top{flex-direction:column;align-items:stretch;gap:14px;}
-    .invoice-brand{width:100%;box-sizing:border-box;}
-    .invoice-title{text-align:left;font-size:19px;}
-    .invoice-meta{grid-template-columns:1fr;gap:2px 0;}
-    .invoice-meta label{text-align:left;margin-top:8px;font-weight:600;}
-    .invoice-meta input{font-size:16px;padding:6px 8px;}
-    .invoice-addr-row{grid-template-columns:1fr;gap:14px;margin-bottom:16px;}
-    .invoice-addr-box td input{font-size:16px;}
-    .invoice-items{font-size:12.5px;}
-    .invoice-items th,.invoice-items td{padding:6px 6px;}
-    .invoice-items td input{font-size:16px;}
-    .invoice-bottom{grid-template-columns:1fr;gap:14px;}
-    .invoice-notes textarea{font-size:16px;}
-    .invoice-totals input{font-size:16px;}
   }
 </style>
 </head>
@@ -294,7 +272,7 @@
   </header>
 
   <div class="layout">
-    <button type="button" class="nav-toggle" id="navToggle">
+    <button class="nav-toggle" id="navToggle" onclick="toggleNav()">
       <span id="navToggleLabel">Browse topics</span>
       <span class="chev">▾</span>
     </button>
@@ -306,29 +284,13 @@
     <div class="main" id="mainPanel">
       <div class="empty-state">
         <div class="big">📖</div>
-        <div>Pick a topic to get started.</div>
+        <div>Pick a topic on the left to get started.</div>
       </div>
     </div>
   </div>
 
   <footer>Kneada resource glossary — everything stays in your browser. Paste in content or links, then export to save it.</footer>
 </div>
-
-<script>
-/* Nav toggle: bound first and independently of everything below, so a later
-   script error can never leave this control unresponsive on any device. */
-(function(){
-  var btn = document.getElementById("navToggle");
-  var panel = document.getElementById("navPanel");
-  if(!btn || !panel) return;
-  function toggle(e){
-    if(e){ e.preventDefault(); }
-    var isOpen = panel.classList.toggle("open");
-    btn.classList.toggle("open", isOpen);
-  }
-  btn.addEventListener("click", toggle);
-})();
-</script>
 
 <script>
 /* ============ GLOSSARY DATA ============ */
@@ -2717,7 +2679,10 @@ window.selectTopic = function(id){
   // On mobile, collapse the topic list and scroll to the content once something is picked.
   if(window.matchMedia("(max-width: 800px)").matches){
     closeNav();
-    mainPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Scroll to the absolute top rather than aligning to mainPanel: the nav
+    // is still mid-collapse-animation here, so measuring its position now
+    // would target the wrong spot once the collapse finishes.
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 };
 
@@ -2914,7 +2879,7 @@ function costBookRecipesHtml(){
       <div class="cb-main">
         <input class="cb-pname-input" id="cbProductName" placeholder="Product name" />
         <div class="table-scroll">
-        <table class="cb-table" style="min-width:640px;">
+        <table class="cb-table" style="width:640px;">
           <colgroup>
             <col style="width:22%"><col style="width:14%"><col style="width:22%"><col style="width:22%"><col style="width:14%"><col style="width:6%">
           </colgroup>
@@ -3199,12 +3164,10 @@ function invoiceHtml(){
         </table>
       </div>
     </div>
-    <div class="table-scroll">
     <table class="invoice-items">
       <thead><tr><th>Description</th><th>Quantity</th><th>Cost</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    </div>
     <div class="invoice-bottom">
       <div class="invoice-notes">
         <h4>Special Notes and Instructions</h4>
@@ -3369,7 +3332,7 @@ function initConverter(){
 function orderEntriesHtml(){
   return `
     <div class="table-scroll">
-    <table class="cb-table" style="min-width:600px;">
+    <table class="cb-table" style="width:600px;">
       <colgroup>
         <col style="width:16%"><col style="width:26%"><col style="width:26%"><col style="width:10%"><col style="width:16%"><col style="width:6%">
       </colgroup>
